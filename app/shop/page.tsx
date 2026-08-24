@@ -111,21 +111,28 @@ export default function ShopPage() {
 
       const matchesSearch = product.name
         .toLowerCase()
-        .includes(search.toLowerCase());
+        .includes(search.toLowerCase().trim());
 
       return matchesCategory && matchesSearch;
     });
 
-    if (sort === "low") {
-      result = [...result].sort((a, b) => a.price - b.price);
-    }
+    switch (sort) {
+      case "low":
+        result = [...result].sort((a, b) => a.price - b.price);
+        break;
 
-    if (sort === "high") {
-      result = [...result].sort((a, b) => b.price - a.price);
-    }
+      case "high":
+        result = [...result].sort((a, b) => b.price - a.price);
+        break;
 
-    if (sort === "name") {
-      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+      case "name":
+        result = [...result].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        break;
+
+      default:
+        break;
     }
 
     return result;
@@ -139,6 +146,12 @@ export default function ShopPage() {
     );
   };
 
+  const clearFilters = () => {
+    setSearch("");
+    setCategory("ALL");
+    setSort("featured");
+  };
+
   const formatPrice = (price: number) =>
     new Intl.NumberFormat("en-IN", {
       style: "currency",
@@ -148,56 +161,67 @@ export default function ShopPage() {
 
   return (
     <main className="shop-page">
-      {/* Header */}
+      {/* =================================
+          HEADER
+      ================================= */}
       <header className="shop-header">
-        <div>
-          <Link href="/" className="shop-logo">
-            RKN<span>®</span>
-          </Link>
-        </div>
+        <Link href="/" className="shop-logo">
+          RKN<span>®</span>
+        </Link>
 
         <nav className="shop-nav">
           <Link href="/">HOME</Link>
-          <a href="/shop" className="active">
+          <Link href="/shop" className="active">
             SHOP
-          </a>
-          <a href="/shop?category=men">MEN</a>
-          <a href="/shop?category=women">WOMEN</a>
+          </Link>
+          <Link href="/shop?category=men">MEN</Link>
+          <Link href="/shop?category=women">WOMEN</Link>
         </nav>
 
         <div className="shop-actions">
-          <span>♡ {wishlist.length}</span>
-          <span>🛍 {cartCount}</span>
+          <span aria-label={`${wishlist.length} wishlist items`}>
+            ♡ {wishlist.length}
+          </span>
+
+          <Link href="/cart" aria-label={`${cartCount} items in cart`}>
+            🛍 {cartCount}
+          </Link>
         </div>
       </header>
 
-      {/* Hero */}
+      {/* =================================
+          HERO
+      ================================= */}
       <section className="shop-hero">
-        <p>RKN / COLLECTION</p>
-
-        <h1>
-          THE
-          <br />
-          <span>COLLECTION.</span>
-        </h1>
-
         <div>
-          <p>
-            Explore premium essentials, timeless silhouettes
+          <p className="v2-label">RKN / COLLECTION</p>
+
+          <h1>
+            THE
             <br />
-            and the latest RKN styles.
-          </p>
+            <span>COLLECTION.</span>
+          </h1>
         </div>
+
+        <p className="shop-hero-text">
+          Explore premium essentials, timeless silhouettes
+          <br />
+          and the latest RKN styles.
+        </p>
       </section>
 
-      {/* Toolbar */}
+      {/* =================================
+          CONTENT
+      ================================= */}
       <section className="shop-content">
+        {/* Toolbar */}
         <div className="shop-toolbar">
           <div className="category-tabs">
             {(["ALL", "MEN", "WOMEN", "UNISEX"] as Category[]).map(
               (item) => (
                 <button
                   key={item}
+                  type="button"
                   className={category === item ? "selected" : ""}
                   onClick={() => setCategory(item)}
                 >
@@ -208,15 +232,16 @@ export default function ShopPage() {
           </div>
 
           <div className="shop-controls">
-            <div className="search-box">
+            <label className="search-box">
               <span>⌕</span>
+
               <input
                 type="search"
                 placeholder="SEARCH PRODUCTS"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
-            </div>
+            </label>
 
             <select
               value={sort}
@@ -231,19 +256,34 @@ export default function ShopPage() {
           </div>
         </div>
 
+        {/* Product count */}
         <div className="product-count">
-          {filteredProducts.length} PRODUCTS
+          <span>{filteredProducts.length} PRODUCTS</span>
+
+          {(search || category !== "ALL" || sort !== "featured") && (
+            <button type="button" onClick={clearFilters}>
+              CLEAR FILTERS ×
+            </button>
+          )}
         </div>
 
-        {/* Product Grid */}
+        {/* =================================
+            PRODUCT GRID
+        ================================= */}
         {filteredProducts.length > 0 ? (
           <div className="shop-product-grid">
             {filteredProducts.map((product) => {
               const isWishlisted = wishlist.includes(product.id);
 
               return (
-                <article className="shop-product-card" key={product.id}>
-                  <div className="shop-product-image">
+                <article
+                  className="shop-product-card"
+                  key={product.id}
+                >
+                  <Link
+                    href={`/product/${product.id}`}
+                    className="shop-product-image"
+                  >
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -253,26 +293,43 @@ export default function ShopPage() {
                     />
 
                     {product.badge && (
-                      <span className="shop-badge">{product.badge}</span>
+                      <span className="shop-badge">
+                        {product.badge}
+                      </span>
                     )}
 
                     <button
+                      type="button"
                       className={`shop-wishlist ${
                         isWishlisted ? "wishlisted" : ""
                       }`}
-                      onClick={() => toggleWishlist(product.id)}
-                      aria-label={`Wishlist ${product.name}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        toggleWishlist(product.id);
+                      }}
+                      aria-label={`${
+                        isWishlisted ? "Remove" : "Add"
+                      } ${product.name} ${
+                        isWishlisted ? "from" : "to"
+                      } wishlist`}
                     >
                       {isWishlisted ? "♥" : "♡"}
                     </button>
 
-                    <button
-                      className="shop-add"
-                      onClick={() => setCartCount((count) => count + 1)}
-                    >
-                      ADD TO CART +
-                    </button>
-                  </div>
+                    <span className="shop-view">
+                      VIEW PRODUCT →
+                    </span>
+                  </Link>
+
+                  <button
+                    type="button"
+                    className="shop-add"
+                    onClick={() =>
+                      setCartCount((count) => count + 1)
+                    }
+                  >
+                    ADD TO CART +
+                  </button>
 
                   <div className="shop-product-info">
                     <p>{product.category}</p>
@@ -280,10 +337,14 @@ export default function ShopPage() {
                     <h2>{product.name}</h2>
 
                     <div className="shop-price">
-                      <strong>{formatPrice(product.price)}</strong>
+                      <strong>
+                        {formatPrice(product.price)}
+                      </strong>
 
                       {product.oldPrice && (
-                        <del>{formatPrice(product.oldPrice)}</del>
+                        <del>
+                          {formatPrice(product.oldPrice)}
+                        </del>
                       )}
                     </div>
                   </div>
@@ -293,45 +354,85 @@ export default function ShopPage() {
           </div>
         ) : (
           <div className="no-products">
-            <h2>NO PRODUCTS FOUND.</h2>
-            <p>Try another search or category.</p>
+            <p className="v2-label">RKN / SEARCH</p>
 
-            <button
-              onClick={() => {
-                setSearch("");
-                setCategory("ALL");
-              }}
-            >
-              CLEAR FILTERS
+            <h2>NO PRODUCTS FOUND.</h2>
+
+            <p>
+              Try another search or select a different category.
+            </p>
+
+            <button type="button" onClick={clearFilters}>
+              CLEAR FILTERS →
             </button>
           </div>
         )}
       </section>
 
-      {/* Footer */}
+      {/* =================================
+          CTA
+      ================================= */}
+      <section className="shop-cta">
+        <p className="v2-label">RKN / ESSENTIALS</p>
+
+        <h2>
+          FIND YOUR
+          <br />
+          <span>IDENTITY.</span>
+        </h2>
+
+        <Link href="/" className="v2-button dark-button">
+          BACK TO HOME →
+        </Link>
+      </section>
+
+      {/* =================================
+          FOOTER
+      ================================= */}
       <footer className="shop-footer">
-        <div>
-          <div className="shop-footer-logo">
-            RKN<span>®</span>
+        <div className="shop-footer-grid">
+          <div>
+            <div className="shop-footer-logo">
+              RKN<span>®</span>
+            </div>
+
+            <p>
+              Modern clothing.
+              <br />
+              Timeless identity.
+            </p>
           </div>
 
-          <p>Modern clothing. Timeless identity.</p>
+          <div>
+            <h3>SHOP</h3>
+
+            <Link href="/shop">All Products</Link>
+            <Link href="/shop?category=men">Men</Link>
+            <Link href="/shop?category=women">Women</Link>
+            <Link href="/shop">New Arrivals</Link>
+          </div>
+
+          <div>
+            <h3>HELP</h3>
+
+            <a href="#">Shipping</a>
+            <a href="#">Returns</a>
+            <a href="#">Contact</a>
+            <a href="#">FAQ</a>
+          </div>
+
+          <div>
+            <h3>FOLLOW</h3>
+
+            <a href="#">Instagram</a>
+            <a href="#">Facebook</a>
+            <a href="#">Pinterest</a>
+          </div>
         </div>
 
-        <div>
-          <h3>SHOP</h3>
-          <a href="/shop">All Products</a>
-          <a href="/shop">Men</a>
-          <a href="/shop">Women</a>
-          <a href="/shop">New Arrivals</a>
-        </div>
-
-        <div>
-          <h3>HELP</h3>
-          <a href="#">Shipping</a>
-          <a href="#">Returns</a>
-          <a href="#">Contact</a>
-          <a href="#">FAQ</a>
+        <div className="shop-footer-bottom">
+          <span>© 2026 RKN. ALL RIGHTS RESERVED.</span>
+          <span>PRIVACY / TERMS</span>
         </div>
       </footer>
     </main>

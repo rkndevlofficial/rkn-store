@@ -1,26 +1,34 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useCart } from "../../cart-context";
 
-const products = [
+type Product = {
+  id: number;
+  name: string;
+  category: "MEN" | "WOMEN" | "UNISEX";
+  price: number;
+  oldPrice?: number;
+  badge?: string;
+  image: string;
+  description: string;
+};
+
+const products: Product[] = [
   {
     id: 1,
     name: "Classic Black Oversized Tee",
     category: "MEN",
     price: 1299,
     oldPrice: 1799,
-    description:
-      "A premium oversized essential designed for everyday confidence. Crafted with a comfortable heavyweight feel and a clean RKN silhouette.",
+    badge: "BESTSELLER",
     image:
       "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=90",
-    gallery: [
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1503341504253-dff4815485f1?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1562157873-818bc0726f68?auto=format&fit=crop&w=1200&q=90",
-    ],
+    description:
+      "A clean oversized silhouette designed for everyday comfort. Premium feel, effortless styling and a timeless RKN identity.",
   },
   {
     id: 2,
@@ -28,15 +36,11 @@ const products = [
     category: "MEN",
     price: 1899,
     oldPrice: 2499,
-    description:
-      "A refined everyday shirt with a clean premium finish. Designed to work effortlessly from casual days to elevated evenings.",
+    badge: "NEW",
     image:
       "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=1200&q=90",
-    gallery: [
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1626497764746-6dc36546b388?auto=format&fit=crop&w=1200&q=90",
-    ],
+    description:
+      "A refined everyday shirt with a clean silhouette and premium finish. Designed to move effortlessly from casual to elevated.",
   },
   {
     id: 3,
@@ -44,15 +48,11 @@ const products = [
     category: "UNISEX",
     price: 2299,
     oldPrice: 2999,
-    description:
-      "A heavyweight everyday hoodie built for comfort and a strong minimal look. An essential RKN layer for every season.",
+    badge: "TRENDING",
     image:
       "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1200&q=90",
-    gallery: [
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1578681994506-b8f463449011?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1509942774463-acf339cf87d5?auto=format&fit=crop&w=1200&q=90",
-    ],
+    description:
+      "A versatile heavyweight-inspired hoodie built around comfort, simplicity and modern streetwear styling.",
   },
   {
     id: 4,
@@ -60,56 +60,97 @@ const products = [
     category: "WOMEN",
     price: 999,
     oldPrice: 1399,
-    description:
-      "A minimal everyday top with a modern silhouette and versatile styling. Designed for effortless RKN looks.",
+    badge: "NEW",
     image:
       "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=90",
-    gallery: [
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=1200&q=90",
+    description:
+      "Minimal styling with an effortless silhouette. A versatile essential made for everyday RKN looks.",
+  },
+  {
+    id: 5,
+    name: "RKN Premium Black Shirt",
+    category: "MEN",
+    price: 1999,
+    oldPrice: 2599,
+    image:
+      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=1200&q=90",
+    description:
+      "A sharp black shirt designed with a modern fit and timeless appeal. An essential piece for a refined wardrobe.",
+  },
+  {
+    id: 6,
+    name: "Classic Denim Jacket",
+    category: "UNISEX",
+    price: 2499,
+    oldPrice: 3299,
+    badge: "LIMITED",
+    image:
+      "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=1200&q=90",
+    description:
+      "A classic denim layer with a relaxed contemporary feel. Designed to pair effortlessly with your everyday essentials.",
+  },
+  {
+    id: 7,
+    name: "Relaxed Everyday Outfit",
+    category: "WOMEN",
+    price: 1599,
+    oldPrice: 2199,
+    image:
       "https://images.unsplash.com/photo-1485968579580-b6d095142e6e?auto=format&fit=crop&w=1200&q=90",
-      "https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=1200&q=90",
-    ],
+    description:
+      "An easy everyday silhouette balancing comfort and modern styling. Made for effortless day-to-day dressing.",
+  },
+  {
+    id: 8,
+    name: "Premium Streetwear Hoodie",
+    category: "UNISEX",
+    price: 2199,
+    oldPrice: 2899,
+    badge: "TRENDING",
+    image:
+      "https://images.unsplash.com/photo-1509942774463-acf339cf87d5?auto=format&fit=crop&w=1200&q=90",
+    description:
+      "Modern streetwear styling with a relaxed fit and premium everyday character.",
   },
 ];
 
 const sizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
-export default function ProductPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const [productId, setProductId] = useState<number | null>(null);
-  const [selectedSize, setSelectedSize] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(0);
-  const [added, setAdded] = useState(false);
-  const [wishlist, setWishlist] = useState(false);
+export default function ProductPage() {
+  const params = useParams();
   const router = useRouter();
 
-  useState(() => {
-    params.then(({ id }) => {
-      setProductId(Number(id));
-    });
-  });
+  const { addToCart, cartCount } = useCart();
 
-  const product = products.find((item) => item.id === productId);
+  const productId = Number(params.id);
 
-  if (productId === null) {
-    return (
-      <main className="product-loading">
-        <div>RKN</div>
-        <p>LOADING PRODUCT...</p>
-      </main>
-    );
-  }
+  const product = useMemo(
+    () => products.find((item) => item.id === productId),
+    [productId]
+  );
+
+  const [selectedSize, setSelectedSize] = useState("M");
+  const [quantity, setQuantity] = useState(1);
+  const [wishlist, setWishlist] = useState(false);
+  const [added, setAdded] = useState(false);
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(price);
 
   if (!product) {
     return (
       <main className="product-not-found">
-        <p>RKN / PRODUCT</p>
+        <p className="v2-label">RKN / PRODUCT</p>
+
         <h1>PRODUCT NOT FOUND.</h1>
-        <Link href="/shop">BACK TO SHOP →</Link>
+
+        <Link href="/shop" className="product-back-button">
+          BACK TO SHOP →
+        </Link>
       </main>
     );
   }
@@ -120,11 +161,22 @@ export default function ProductPage({
       )
     : 0;
 
+  /*
+   * =========================================
+   * ADD TO CART
+   * =========================================
+   */
+
   const handleAddToCart = () => {
-    if (!selectedSize) {
-      alert("Please select a size first.");
-      return;
-    }
+    addToCart({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      size: selectedSize,
+      price: product.price,
+      quantity,
+      image: product.image,
+    });
 
     setAdded(true);
 
@@ -133,18 +185,34 @@ export default function ProductPage({
     }, 2500);
   };
 
-  const handleBuyNow = () => {
-    if (!selectedSize) {
-      alert("Please select a size first.");
-      return;
-    }
+  /*
+   * =========================================
+   * BUY NOW
+   * =========================================
+   */
 
-    router.push("/checkout");
+  const handleBuyNow = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      size: selectedSize,
+      price: product.price,
+      quantity,
+      image: product.image,
+    });
+
+    setTimeout(() => {
+      router.push("/checkout");
+    }, 250);
   };
 
   return (
     <main className="product-page">
-      {/* Header */}
+      {/* =================================
+          HEADER
+      ================================= */}
+
       <header className="product-header">
         <Link href="/" className="product-logo">
           RKN<span>®</span>
@@ -153,123 +221,135 @@ export default function ProductPage({
         <nav>
           <Link href="/">HOME</Link>
           <Link href="/shop">SHOP</Link>
-          <Link href="/shop">MEN</Link>
-          <Link href="/shop">WOMEN</Link>
+          <Link href="/shop?category=men">MEN</Link>
+          <Link href="/shop?category=women">WOMEN</Link>
         </nav>
 
         <div className="product-header-actions">
-          <button aria-label="Search">⌕</button>
-          <button aria-label="Wishlist">♡</button>
-          <Link href="/cart">🛍</Link>
+          <button
+            type="button"
+            onClick={() => setWishlist(!wishlist)}
+            aria-label="Wishlist"
+          >
+            {wishlist ? "♥" : "♡"}
+          </button>
+
+          <Link href="/cart" aria-label="Shopping cart">
+            🛍
+            {cartCount > 0 && (
+              <sup className="product-cart-count">
+                {cartCount}
+              </sup>
+            )}
+          </Link>
         </div>
       </header>
 
-      {/* Breadcrumb */}
+      {/* =================================
+          BREADCRUMB
+      ================================= */}
+
       <div className="product-breadcrumb">
         <Link href="/">HOME</Link>
+
         <span>/</span>
+
         <Link href="/shop">SHOP</Link>
+
         <span>/</span>
-        <span>{product.category}</span>
+
+        <span>{product.name.toUpperCase()}</span>
       </div>
 
-      {/* Product */}
-      <section className="product-main">
-        {/* Gallery */}
-        <div className="product-gallery">
-          <div className="product-thumbnails">
-            {product.gallery.map((image, index) => (
-              <button
-                key={image}
-                className={activeImage === index ? "active" : ""}
-                onClick={() => setActiveImage(index)}
-              >
-                <Image
-                  src={image}
-                  alt={`${product.name} ${index + 1}`}
-                  width={96}
-                  height={96}
-                />
-              </button>
-            ))}
-          </div>
+      {/* =================================
+          PRODUCT DETAIL
+      ================================= */}
 
-          <div className="product-main-image">
-            <Image
-              src={product.gallery[activeImage]}
-              alt={product.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 60vw"
-              priority
-            />
+      <section className="product-detail">
+        {/* IMAGE */}
 
-            {discount > 0 && (
-              <span className="product-discount">-{discount}%</span>
-            )}
+        <div className="product-detail-image">
+          <Image
+            src={product.image}
+            alt={product.name}
+            width={1200}
+            height={1500}
+            priority
+            unoptimized
+          />
 
-            <button
-              className={`product-favorite ${
-                wishlist ? "active" : ""
-              }`}
-              onClick={() => setWishlist(!wishlist)}
-              aria-label="Add to wishlist"
-            >
-              {wishlist ? "♥" : "♡"}
-            </button>
-          </div>
+          {product.badge && (
+            <span className="product-detail-badge">
+              {product.badge}
+            </span>
+          )}
+
+          <button
+            type="button"
+            className={`product-detail-wishlist ${
+              wishlist ? "active" : ""
+            }`}
+            onClick={() => setWishlist(!wishlist)}
+            aria-label="Add to wishlist"
+          >
+            {wishlist ? "♥" : "♡"}
+          </button>
         </div>
 
-        {/* Details */}
-        <div className="product-details">
-          <p className="product-category">{product.category}</p>
+        {/* INFO */}
+
+        <div className="product-detail-info">
+          <p className="product-category-label">
+            RKN / {product.category}
+          </p>
 
           <h1>{product.name}</h1>
 
-          <div className="product-rating">
-            <span>★★★★★</span>
-            <span>4.9</span>
-            <Link href="#reviews">128 REVIEWS</Link>
-          </div>
+          {/* PRICE */}
 
-          <div className="product-pricing">
-            <strong>
-              {new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency: "INR",
-                maximumFractionDigits: 0,
-              }).format(product.price)}
-            </strong>
+          <div className="product-detail-price">
+            <strong>{formatPrice(product.price)}</strong>
 
             {product.oldPrice && (
-              <del>
-                {new Intl.NumberFormat("en-IN", {
-                  style: "currency",
-                  currency: "INR",
-                  maximumFractionDigits: 0,
-                }).format(product.oldPrice)}
-              </del>
-            )}
+              <>
+                <del>{formatPrice(product.oldPrice)}</del>
 
-            {discount > 0 && <span>{discount}% OFF</span>}
+                <span>{discount}% OFF</span>
+              </>
+            )}
           </div>
 
-          <div className="product-divider" />
+          {/* DESCRIPTION */}
 
-          <p className="product-description">{product.description}</p>
+          <p className="product-description">
+            {product.description}
+          </p>
 
-          {/* Size */}
-          <div className="size-section">
-            <div className="size-heading">
+          {/* SIZE */}
+
+          <div className="product-option">
+            <div className="option-heading">
               <span>SELECT SIZE</span>
-              <button>SIZE GUIDE</button>
+
+              <button type="button">
+                SIZE GUIDE
+              </button>
             </div>
 
-            <div className="sizes">
+            <div className="size-grid">
               {sizes.map((size) => (
                 <button
+                  type="button"
                   key={size}
-                  className={selectedSize === size ? "selected" : ""}
-                  onClick={() => setSelectedSize(size)}
+                  className={
+                    selectedSize === size
+                      ? "selected"
+                      : ""
+                  }
+                  onClick={() => {
+                    setSelectedSize(size);
+                    setAdded(false);
+                  }}
                 >
                   {size}
                 </button>
@@ -277,145 +357,206 @@ export default function ProductPage({
             </div>
           </div>
 
-          {/* Quantity */}
-          <div className="quantity-section">
-            <span>QUANTITY</span>
+          {/* QUANTITY */}
 
-            <div className="quantity">
+          <div className="product-option">
+            <div className="option-heading">
+              <span>QUANTITY</span>
+            </div>
+
+            <div className="quantity-control">
               <button
+                type="button"
                 onClick={() =>
-                  setQuantity((current) => Math.max(1, current - 1))
+                  setQuantity((current) =>
+                    Math.max(1, current - 1)
+                  )
                 }
+                aria-label="Decrease quantity"
               >
                 −
               </button>
 
               <span>{quantity}</span>
 
-              <button onClick={() => setQuantity((current) => current + 1)}>
+              <button
+                type="button"
+                onClick={() =>
+                  setQuantity((current) => current + 1)
+                }
+                aria-label="Increase quantity"
+              >
                 +
               </button>
             </div>
           </div>
 
-          {/* Actions */}
+          {/* ACTION BUTTONS */}
+
           <div className="product-actions">
-            <button className="add-cart-button" onClick={handleAddToCart}>
-              {added ? "ADDED TO CART ✓" : "ADD TO CART"}
+            <button
+              type="button"
+              className={`add-cart-button ${
+                added ? "added" : ""
+              }`}
+              onClick={handleAddToCart}
+            >
+              {added
+                ? "ADDED TO CART ✓"
+                : "ADD TO CART"}
             </button>
 
-            <button className="buy-now-button" onClick={handleBuyNow}>
-              BUY IT NOW
+            <button
+              type="button"
+              className="buy-now-button"
+              onClick={handleBuyNow}
+            >
+              BUY IT NOW →
             </button>
           </div>
 
-          {/* Benefits */}
+          {/* BENEFITS */}
+
           <div className="product-benefits">
             <div>
               <span>01</span>
+
               <div>
                 <strong>FREE SHIPPING</strong>
-                <p>On orders above ₹1,999</p>
+
+                <p>
+                  On orders above ₹1,999
+                </p>
               </div>
             </div>
 
             <div>
               <span>02</span>
+
               <div>
                 <strong>EASY RETURNS</strong>
-                <p>7-day easy return policy</p>
+
+                <p>
+                  Simple and hassle-free returns
+                </p>
               </div>
             </div>
 
             <div>
               <span>03</span>
+
               <div>
                 <strong>SECURE PAYMENT</strong>
-                <p>100% secure checkout</p>
+
+                <p>
+                  Safe and secure checkout
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Description */}
-      <section className="product-description-section">
-        <div>
-          <p>RKN / DETAILS</p>
-          <h2>DESIGNED FOR<br />EVERYDAY.</h2>
-        </div>
+      {/* =================================
+          PRODUCT STORY
+      ================================= */}
 
+      <section className="product-story">
         <div>
-          <p>
-            Every RKN piece is designed around the idea that great clothing
-            should feel effortless. Clean lines, versatile styling and
-            carefully considered details make this piece an everyday
-            essential.
+          <p className="v2-label">
+            RKN / DETAILS
           </p>
 
-          <div className="detail-list">
-            <div>
-              <span>FABRIC</span>
-              <strong>Premium Cotton Blend</strong>
-            </div>
-
-            <div>
-              <span>FIT</span>
-              <strong>Relaxed / Oversized</strong>
-            </div>
-
-            <div>
-              <span>CARE</span>
-              <strong>Machine Wash Cold</strong>
-            </div>
-          </div>
+          <h2>
+            DESIGNED
+            <br />
+            <span>FOR EVERYDAY.</span>
+          </h2>
         </div>
+
+        <p>
+          Every RKN piece is created around the idea
+          that good clothing doesn&apos;t need to shout.
+          Clean silhouettes, timeless styling and details
+          that let your identity do the talking.
+        </p>
       </section>
 
-      {/* Reviews */}
-      <section className="reviews" id="reviews">
-        <p>RKN / REVIEWS</p>
-        <h2>WHAT PEOPLE SAY.</h2>
+      {/* =================================
+          CTA
+      ================================= */}
 
-        <div className="review-grid">
-          <article>
-            <div>★★★★★</div>
-            <p>
-              “The quality feels premium and the fit is exactly what I
-              wanted.”
-            </p>
-            <span>— ARJUN M.</span>
-          </article>
+      <section className="product-bottom-cta">
+        <p className="v2-label">
+          RKN / COLLECTION
+        </p>
 
-          <article>
-            <div>★★★★★</div>
-            <p>
-              “Super clean design. Looks even better in person.”
-            </p>
-            <span>— RAHUL K.</span>
-          </article>
+        <h2>
+          KEEP
+          <br />
+          <span>EXPLORING.</span>
+        </h2>
 
-          <article>
-            <div>★★★★★</div>
-            <p>
-              “Really comfortable and the delivery was quick.”
-            </p>
-            <span>— PRIYA S.</span>
-          </article>
-        </div>
+        <Link
+          href="/shop"
+          className="product-back-button"
+        >
+          SHOP COLLECTION →
+        </Link>
       </section>
 
-      {/* Footer */}
+      {/* =================================
+          FOOTER
+      ================================= */}
+
       <footer className="product-footer">
-        <div className="product-footer-logo">
-          RKN<span>®</span>
+        <div>
+          <div className="product-footer-logo">
+            RKN<span>®</span>
+          </div>
+
+          <p>
+            Modern clothing.
+            <br />
+            Timeless identity.
+          </p>
         </div>
 
         <div>
-          <a href="/shop">SHOP</a>
-          <a href="#">CONTACT</a>
-          <a href="#">SHIPPING</a>
-          <a href="#">RETURNS</a>
+          <h3>SHOP</h3>
+
+          <Link href="/shop">
+            All Products
+          </Link>
+
+          <Link href="/shop?category=men">
+            Men
+          </Link>
+
+          <Link href="/shop?category=women">
+            Women
+          </Link>
+
+          <Link href="/shop">
+            New Arrivals
+          </Link>
+        </div>
+
+        <div>
+          <h3>HELP</h3>
+
+          <a href="#">Shipping</a>
+          <a href="#">Returns</a>
+          <a href="#">Contact</a>
+          <a href="#">FAQ</a>
+        </div>
+
+        <div>
+          <h3>FOLLOW</h3>
+
+          <a href="#">Instagram</a>
+          <a href="#">Facebook</a>
+          <a href="#">Pinterest</a>
         </div>
       </footer>
     </main>

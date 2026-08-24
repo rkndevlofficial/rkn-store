@@ -1,60 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-
-const initialCart = [
-  {
-    id: 1,
-    name: "Classic Black Oversized Tee",
-    category: "MEN",
-    size: "M",
-    price: 1299,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=800&q=85",
-  },
-  {
-    id: 3,
-    name: "Essential Black Hoodie",
-    category: "UNISEX",
-    size: "L",
-    price: 2299,
-    quantity: 1,
-    image:
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=800&q=85",
-  },
-];
+import { useCart } from "../cart-context";
 
 export default function CartPage() {
-  const [cart, setCart] = useState(initialCart);
-
-  const updateQuantity = (id: number, change: number) => {
-    setCart((items) =>
-      items
-        .map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                quantity: Math.max(1, item.quantity + change),
-              }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const removeItem = (id: number) => {
-    setCart((items) => items.filter((item) => item.id !== id));
-  };
+  const {
+    cart,
+    cartCount,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+  } = useCart();
 
   const subtotal = cart.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
-  const shipping = subtotal >= 1999 || subtotal === 0 ? 0 : 99;
+  const shipping =
+    subtotal === 0 || subtotal >= 1999 ? 0 : 99;
+
   const total = subtotal + shipping;
 
   const formatPrice = (price: number) =>
@@ -66,7 +32,8 @@ export default function CartPage() {
 
   return (
     <main className="cart-page">
-      {/* Header */}
+      {/* HEADER */}
+
       <header className="cart-header">
         <Link href="/" className="cart-logo">
           RKN<span>®</span>
@@ -74,20 +41,25 @@ export default function CartPage() {
 
         <nav>
           <Link href="/">HOME</Link>
-          <a href="/shop">SHOP</a>
-          <a href="/shop">MEN</a>
-          <a href="/shop">WOMEN</a>
+          <Link href="/shop">SHOP</Link>
+          <Link href="/shop?category=men">MEN</Link>
+          <Link href="/shop?category=women">WOMEN</Link>
         </nav>
 
         <div className="cart-header-right">
           <span>SECURE CHECKOUT</span>
-          <a href="/shop">CONTINUE SHOPPING →</a>
+
+          <Link href="/shop">
+            CONTINUE SHOPPING →
+          </Link>
         </div>
       </header>
 
-      {/* Title */}
+      {/* TITLE */}
+
       <section className="cart-title">
         <p>RKN / YOUR BAG</p>
+
         <h1>
           SHOPPING
           <br />
@@ -95,13 +67,16 @@ export default function CartPage() {
         </h1>
 
         <span className="cart-item-count">
-          {cart.reduce((sum, item) => sum + item.quantity, 0)} ITEMS
+          {cartCount} {cartCount === 1 ? "ITEM" : "ITEMS"}
         </span>
       </section>
 
+      {/* CART */}
+
       {cart.length > 0 ? (
         <section className="cart-content">
-          {/* Items */}
+          {/* ITEMS */}
+
           <div className="cart-items">
             <div className="cart-items-heading">
               <span>PRODUCT</span>
@@ -109,9 +84,15 @@ export default function CartPage() {
             </div>
 
             {cart.map((item) => (
-              <article className="cart-item" key={item.id}>
+              <article
+                className="cart-item"
+                key={`${item.id}-${item.size}`}
+              >
                 <div className="cart-product">
-                  <a href={`/product/${item.id}`} className="cart-image">
+                  <Link
+                    href={`/product/${item.id}`}
+                    className="cart-image"
+                  >
                     <Image
                       src={item.image}
                       alt={item.name}
@@ -119,16 +100,26 @@ export default function CartPage() {
                       height={1000}
                       unoptimized
                     />
-                  </a>
+                  </Link>
 
                   <div className="cart-product-info">
                     <p>{item.category}</p>
 
                     <h2>{item.name}</h2>
 
-                    <span>SIZE: {item.size}</span>
+                    <span>
+                      SIZE: {item.size}
+                    </span>
 
-                    <button onClick={() => removeItem(item.id)}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        removeFromCart(
+                          item.id,
+                          item.size
+                        )
+                      }
+                    >
                       REMOVE
                     </button>
                   </div>
@@ -136,47 +127,92 @@ export default function CartPage() {
 
                 <div className="cart-price-area">
                   <div className="cart-quantity">
-                    <button onClick={() => updateQuantity(item.id, -1)}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.id,
+                          item.size,
+                          -1
+                        )
+                      }
+                      aria-label="Decrease quantity"
+                    >
                       −
                     </button>
 
                     <span>{item.quantity}</span>
 
-                    <button onClick={() => updateQuantity(item.id, 1)}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          item.id,
+                          item.size,
+                          1
+                        )
+                      }
+                      aria-label="Increase quantity"
+                    >
                       +
                     </button>
                   </div>
 
                   <strong>
-                    {formatPrice(item.price * item.quantity)}
+                    {formatPrice(
+                      item.price * item.quantity
+                    )}
                   </strong>
                 </div>
               </article>
             ))}
 
+            {/* SHIPPING NOTE */}
+
             <div className="cart-note">
-              <span>RKN / NOTE</span>
+              <span>RKN / SHIPPING</span>
+
               <p>
-                Free shipping is automatically applied to orders above ₹1,999.
+                Free shipping is automatically applied to
+                orders above ₹1,999.
               </p>
             </div>
+
+            {/* CLEAR BAG */}
+
+            <button
+              type="button"
+              className="clear-cart-button"
+              onClick={clearCart}
+            >
+              CLEAR BAG
+            </button>
           </div>
 
-          {/* Summary */}
+          {/* SUMMARY */}
+
           <aside className="cart-summary">
-            <p className="summary-label">ORDER SUMMARY</p>
+            <p className="summary-label">
+              ORDER SUMMARY
+            </p>
 
             <h2>SUMMARY.</h2>
 
             <div className="summary-row">
               <span>SUBTOTAL</span>
-              <strong>{formatPrice(subtotal)}</strong>
+
+              <strong>
+                {formatPrice(subtotal)}
+              </strong>
             </div>
 
             <div className="summary-row">
               <span>SHIPPING</span>
+
               <strong>
-                {shipping === 0 ? "FREE" : formatPrice(shipping)}
+                {shipping === 0
+                  ? "FREE"
+                  : formatPrice(shipping)}
               </strong>
             </div>
 
@@ -184,14 +220,22 @@ export default function CartPage() {
 
             <div className="summary-total">
               <span>TOTAL</span>
-              <strong>{formatPrice(total)}</strong>
+
+              <strong>
+                {formatPrice(total)}
+              </strong>
             </div>
 
-            <p className="tax-note">INCLUDING ALL APPLICABLE TAXES</p>
+            <p className="tax-note">
+              INCLUDING ALL APPLICABLE TAXES
+            </p>
 
-            <a href="/checkout" className="checkout-button">
+            <Link
+              href="/checkout"
+              className="checkout-button"
+            >
               PROCEED TO CHECKOUT →
-            </a>
+            </Link>
 
             <div className="payment-icons">
               <span>UPI</span>
@@ -202,6 +246,8 @@ export default function CartPage() {
           </aside>
         </section>
       ) : (
+        /* EMPTY BAG */
+
         <section className="empty-cart">
           <div>
             <span>RKN / 00</span>
@@ -213,24 +259,29 @@ export default function CartPage() {
             </h2>
 
             <p>
-              Looks like you haven&apos;t added anything to your bag yet.
+              Looks like you haven&apos;t added anything
+              to your bag yet.
             </p>
 
-            <a href="/shop">EXPLORE COLLECTION →</a>
+            <Link href="/shop">
+              EXPLORE COLLECTION →
+            </Link>
           </div>
         </section>
       )}
 
-      {/* Footer */}
+      {/* FOOTER */}
+
       <footer className="cart-footer">
         <div className="cart-footer-logo">
           RKN<span>®</span>
         </div>
 
         <div>
-          <a href="#">PRIVACY</a>
-          <a href="#">TERMS</a>
-          <a href="#">CONTACT</a>
+          <Link href="/shop">SHOP</Link>
+          <Link href="#">PRIVACY</Link>
+          <Link href="#">TERMS</Link>
+          <Link href="#">CONTACT</Link>
         </div>
 
         <span>© 2026 RKN</span>

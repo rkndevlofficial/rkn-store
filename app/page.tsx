@@ -1,6 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 
+import Navbar from "@/components/Navbar";
+import ProductCard from "@/components/ProductCard";
+import { products } from "@/data/products";
+
 const categories = [
   {
     title: "MEN",
@@ -22,70 +26,17 @@ const categories = [
   },
 ];
 
-const products = [
-  {
-    name: "Classic Black Tee",
-    category: "MEN",
-    price: "₹1,299",
-    image:
-      "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    name: "Premium White Shirt",
-    category: "MEN",
-    price: "₹1,899",
-    image:
-      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    name: "Essential Black Hoodie",
-    category: "UNISEX",
-    price: "₹2,299",
-    image:
-      "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    name: "Minimal Fashion Top",
-    category: "WOMEN",
-    price: "₹999",
-    image:
-      "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=900&q=85",
-  },
-];
-
 export default function Home() {
   return (
     <main>
-      {/* Announcement */}
-      <div className="announcement">
-        FREE SHIPPING ON ORDERS ABOVE ₹1,999
-      </div>
+      {/* ================================
+          NAVBAR
+      ================================= */}
+      <Navbar />
 
-      {/* Navbar */}
-      <header className="navbar">
-        <div className="navbar-inner">
-          <Link href="/" className="logo">
-            RKN<span>®</span>
-          </Link>
-
-          <nav>
-            <a href="#new">NEW ARRIVALS</a>
-            <a href="#men">MEN</a>
-            <a href="#women">WOMEN</a>
-            <a href="#collections">COLLECTIONS</a>
-            <a href="#sale">SALE</a>
-          </nav>
-
-          <div className="nav-icons">
-            <button aria-label="Search">⌕</button>
-            <button aria-label="Account">♙</button>
-            <button aria-label="Wishlist">♡</button>
-            <button aria-label="Cart">🛍</button>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
+      {/* ================================
+          HERO
+      ================================= */}
       <section className="hero">
         <div className="hero-overlay" />
 
@@ -104,9 +55,9 @@ export default function Home() {
             who believe less is always more.
           </p>
 
-          <a href="#new" className="hero-button">
+          <Link href="/shop" className="hero-button">
             SHOP COLLECTION <span>→</span>
-          </a>
+          </Link>
         </div>
 
         <div className="hero-bottom">
@@ -115,7 +66,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Philosophy */}
+      {/* ================================
+          PHILOSOPHY
+      ================================= */}
       <section className="philosophy">
         <p className="label">RKN / PHILOSOPHY</p>
 
@@ -133,7 +86,9 @@ export default function Home() {
         </p>
       </section>
 
-      {/* Categories */}
+      {/* ================================
+          CATEGORIES
+      ================================= */}
       <section className="section" id="collections">
         <div className="section-heading">
           <div>
@@ -141,12 +96,16 @@ export default function Home() {
             <h2>SHOP BY CATEGORY</h2>
           </div>
 
-          <a href="#new">VIEW ALL →</a>
+          <Link href="/shop">VIEW ALL →</Link>
         </div>
 
         <div className="category-grid">
           {categories.map((category) => (
-            <a href="#new" className="category-card" key={category.title}>
+            <Link
+              href="/shop"
+              className="category-card"
+              key={category.title}
+            >
               <Image
                 src={category.image}
                 alt={category.title}
@@ -162,12 +121,14 @@ export default function Home() {
                 <h3>{category.title}</h3>
                 <span>SHOP NOW →</span>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* Products */}
+      {/* ================================
+          NEW ARRIVALS
+      ================================= */}
       <section className="section products" id="new">
         <div className="section-heading">
           <div>
@@ -175,41 +136,27 @@ export default function Home() {
             <h2>NEW ARRIVALS</h2>
           </div>
 
-          <a href="#new">SHOP ALL →</a>
+          <Link href="/shop">SHOP ALL →</Link>
         </div>
 
         <div className="product-grid">
           {products.map((product) => (
-            <article className="product-card" key={product.name}>
-              <div className="product-image">
-                <Image
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 300px"
-                />
-
-                <button
-                  className="wishlist"
-                  aria-label={`Add ${product.name} to wishlist`}
-                >
-                  ♡
-                </button>
-
-                <span className="quick-add">QUICK ADD +</span>
-              </div>
-
-              <div className="product-info">
-                <small>{product.category}</small>
-                <h3>{product.name}</h3>
-                <strong>{product.price}</strong>
-              </div>
-            </article>
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              name={product.name}
+              category={product.category}
+              price={product.price}
+              image={product.image}
+              badge={product.badge}
+            />
           ))}
         </div>
       </section>
 
-      {/* Statement */}
+      {/* ================================
+          STATEMENT
+      ================================= */}
       <section className="statement" id="sale">
         <div className="statement-overlay" />
 
@@ -226,13 +173,15 @@ export default function Home() {
             <span>STYLE.</span>
           </h2>
 
-          <a href="#new" className="hero-button">
+          <Link href="/shop" className="hero-button">
             SHOP ESSENTIALS →
-          </a>
+          </Link>
         </div>
       </section>
 
-      {/* Features */}
+      {/* ================================
+          FEATURES
+      ================================= */}
       <section className="features">
         <div>
           <span>01</span>
@@ -260,7 +209,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Newsletter */}
+      {/* ================================
+          NEWSLETTER
+      ================================= */}
       <section className="newsletter">
         <p className="label">RKN / INSIDER</p>
 
@@ -282,11 +233,15 @@ export default function Home() {
         </form>
       </section>
 
-      {/* Footer */}
+      {/* ================================
+          FOOTER
+      ================================= */}
       <footer>
         <div className="footer-grid">
           <div>
-            <div className="footer-logo">RKN<span>®</span></div>
+            <div className="footer-logo">
+              RKN<span>®</span>
+            </div>
 
             <p>
               Modern clothing.
@@ -297,14 +252,16 @@ export default function Home() {
 
           <div>
             <h4>SHOP</h4>
-            <a href="#men">Men</a>
-            <a href="#women">Women</a>
-            <a href="#new">New Arrivals</a>
-            <a href="#sale">Sale</a>
+
+            <Link href="/shop?category=men">Men</Link>
+            <Link href="/shop?category=women">Women</Link>
+            <Link href="/shop">New Arrivals</Link>
+            <Link href="/shop?sale=true">Sale</Link>
           </div>
 
           <div>
             <h4>HELP</h4>
+
             <a href="#">Contact Us</a>
             <a href="#">Shipping</a>
             <a href="#">Returns</a>
@@ -313,6 +270,7 @@ export default function Home() {
 
           <div>
             <h4>FOLLOW</h4>
+
             <a href="#">Instagram</a>
             <a href="#">Facebook</a>
             <a href="#">Pinterest</a>
